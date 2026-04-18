@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wait for it...</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        #timer {
+            color: #222; /* 初始颜色极暗 */
+            font-size: 8rem;
+            font-weight: 900;
+            transition: all 0.2s;
+            user-select: none;
+            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        #start-btn {
+            padding: 20px 50px;
+            background: transparent;
+            border: 1px solid #333;
+            color: #555;
+            cursor: pointer;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            z-index: 101;
+            font-family: inherit;
+        }
+
+        #start-btn:hover {
+            color: #fff;
+            border-color: #666;
+        }
+
+        #result {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            background: #000;
+            z-index: 100;
+        }
+
+        #result img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .shake {
+            animation: shake 0.1s infinite;
+            color: #600 !important; /* 最后10秒变暗红 */
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px); }
+            50% { transform: translate(-1px, -2px); }
+            100% { transform: translate(1px, 2px); }
+        }
+    </style>
+</head>
+<body>
+
+    <button id="start-btn">开始</button>
+    <div id="timer" style="display:none;">60</div>
+
+    <div id="result">
+        <img id="gaze-image" src="" alt="Looking at you" />
+    </div>
+
+    <audio id="bg-audio" loop>
+        <source src="https://assets.mixkit.co/active_storage/sfx/943/943-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const startBtn = document.getElementById('start-btn');
+        const timerDisplay = document.getElementById('timer');
+        const resultView = document.getElementById('result');
+        const gazeImage = document.getElementById('gaze-image');
+        const bgAudio = document.getElementById('bg-audio');
+
+        let count = 60; 
+
+        const imagePool = [
+            "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?q=80&w=1000",
+            "https://images.unsplash.com/photo-1503066211613-c17ebc9daef0?q=80&w=1000",
+            "https://images.unsplash.com/photo-1590004953392-5aba2e72269a?q=80&w=1000",
+            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000",
+            "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?q=80&w=1000",
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1000",
+            "https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=1000",
+            "https://images.unsplash.com/photo-1506152983158-b4a74a01c721?q=80&w=1000",
+            "https://images.unsplash.com/photo-1510009477610-c3d350917631?q=80&w=1000",
+            "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?q=80&w=1000",
+            "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?q=80&w=1000",
+            "https://images.unsplash.com/photo-1500333932333-7d879f9720b0?q=80&w=1000",
+            "https://images.unsplash.com/photo-1583021798539-74d115e4f48d?q=80&w=1000",
+            "https://images.unsplash.com/photo-1532997092120-7f2a1b1a7d6e?q=80&w=1000",
+            "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1000"
+        ];
+
+        startBtn.addEventListener('click', () => {
+            startBtn.style.display = 'none';
+            timerDisplay.style.display = 'block';
+            
+            // 初始音量极小 (5%)
+            bgAudio.volume = 0.05;
+            bgAudio.play();
+
+            const interval = setInterval(() => {
+                count--;
+                timerDisplay.innerText = count;
+
+                // 声音随时间线性变大
+                let vol = 0.05 + ((60 - count) / 60) * 0.95;
+                bgAudio.volume = Math.min(vol, 1);
+
+                if (count <= 10 && count > 0) {
+                    timerDisplay.classList.add('shake');
+                }
+
+                if (count <= 0) {
+                    clearInterval(interval);
+                    bgAudio.pause(); 
+                    
+                    const randomIndex = Math.floor(Math.random() * imagePool.length);
+                    gazeImage.src = imagePool[randomIndex];
+                    resultView.style.display = 'block';
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
