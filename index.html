@@ -96,6 +96,7 @@
 
         let count = 60; 
 
+        // 修复了这里的中文逗号
         const imagePool = [
             "https://images.pexels.com/photos/4449232/pexels-photo-4449232.jpeg",
             "https://images.pexels.com/photos/4660414/pexels-photo-4660414.jpeg",
@@ -110,23 +111,29 @@
             "https://images.pexels.com/photos/32717657/pexels-photo-32717657.jpeg",
             "https://images.pexels.com/photos/33450327/pexels-photo-33450327.jpeg",
             "https://images.pexels.com/photos/32119774/pexels-photo-32119774.jpeg",
-            "https://images.pexels.com/photos/17960083/pexels-photo-17960083.jpeg"，
+            "https://images.pexels.com/photos/17960083/pexels-photo-17960083.jpeg",
             "https://images.pexels.com/photos/35394188/pexels-photo-35394188.jpeg"
         ];
 
+        // 预加载随机一张图片，防止倒计时结束时白屏
+        const preloadImage = () => {
+            const randomIndex = Math.floor(Math.random() * imagePool.length);
+            gazeImage.src = imagePool[randomIndex];
+        };
+
         startBtn.addEventListener('click', () => {
+            preloadImage(); // 点击时就开始后台加载图片
             startBtn.style.display = 'none';
             timerDisplay.style.display = 'block';
             
-            // 初始音量极小 (5%)
             bgAudio.volume = 0.05;
-            bgAudio.play();
+            bgAudio.play().catch(e => console.log("Audio play blocked"));
 
             const interval = setInterval(() => {
                 count--;
                 timerDisplay.innerText = count;
 
-                // 声音随时间线性变大
+                // 声音线性变大
                 let vol = 0.05 + ((60 - count) / 60) * 0.95;
                 bgAudio.volume = Math.min(vol, 1);
 
@@ -137,9 +144,7 @@
                 if (count <= 0) {
                     clearInterval(interval);
                     bgAudio.pause(); 
-                    
-                    const randomIndex = Math.floor(Math.random() * imagePool.length);
-                    gazeImage.src = imagePool[randomIndex];
+                    timerDisplay.style.display = 'none';
                     resultView.style.display = 'block';
                 }
             }, 1000);
