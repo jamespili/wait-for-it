@@ -19,7 +19,7 @@
         }
 
         #timer {
-            color: #222; /* 初始颜色极暗 */
+            color: #222;
             font-size: 8rem;
             font-weight: 900;
             transition: all 0.2s;
@@ -37,7 +37,6 @@
             font-size: 1.2rem;
             letter-spacing: 2px;
             z-index: 101;
-            font-family: inherit;
         }
 
         #start-btn:hover {
@@ -62,9 +61,31 @@
             object-fit: contain;
         }
 
+        /* 闪光灯特效 */
+        #flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            opacity: 0;
+            z-index: 102;
+            pointer-events: none;
+        }
+
+        .flash-active {
+            animation: flash-anim 0.4s ease-out;
+        }
+
+        @keyframes flash-anim {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
         .shake {
             animation: shake 0.1s infinite;
-            color: #600 !important; /* 最后10秒变暗红 */
+            color: #600 !important;
         }
 
         @keyframes shake {
@@ -78,13 +99,18 @@
 
     <button id="start-btn">开始</button>
     <div id="timer" style="display:none;">60</div>
+    <div id="flash"></div>
 
     <div id="result">
-        <img id="gaze-image" src="" alt="Looking at you" />
+        <img id="gaze-image" src="" alt="Captured" />
     </div>
 
     <audio id="bg-audio" loop>
         <source src="https://assets.mixkit.co/active_storage/sfx/943/943-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="shutter-audio">
+        <source src="https://assets.mixkit.co/active_storage/sfx/528/528-preview.mp3" type="audio/mpeg">
     </audio>
 
     <script>
@@ -93,10 +119,11 @@
         const resultView = document.getElementById('result');
         const gazeImage = document.getElementById('gaze-image');
         const bgAudio = document.getElementById('bg-audio');
+        const shutterAudio = document.getElementById('shutter-audio');
+        const flash = document.getElementById('flash');
 
         let count = 60; 
 
-        // 修复了这里的中文逗号
         const imagePool = [
             "https://images.pexels.com/photos/4449232/pexels-photo-4449232.jpeg",
             "https://images.pexels.com/photos/4660414/pexels-photo-4660414.jpeg",
@@ -115,27 +142,26 @@
             "https://images.pexels.com/photos/35394188/pexels-photo-35394188.jpeg"
         ];
 
-        // 预加载随机一张图片，防止倒计时结束时白屏
-        const preloadImage = () => {
+        // 预加载逻辑
+        const prepareResult = () => {
             const randomIndex = Math.floor(Math.random() * imagePool.length);
             gazeImage.src = imagePool[randomIndex];
         };
 
         startBtn.addEventListener('click', () => {
-            preloadImage(); // 点击时就开始后台加载图片
+            prepareResult();
             startBtn.style.display = 'none';
             timerDisplay.style.display = 'block';
             
             bgAudio.volume = 0.05;
-            bgAudio.play().catch(e => console.log("Audio play blocked"));
+            bgAudio.play().catch(() => {});
 
             const interval = setInterval(() => {
                 count--;
                 timerDisplay.innerText = count;
 
-                // 声音线性变大
-                let vol = 0.05 + ((60 - count) / 60) * 0.95;
-                bgAudio.volume = Math.min(vol, 1);
+                let vol = 0.05 + ((60 - count) / 60) * 0.90;
+                bgAudio.volume = Math.min(vol, 0.95);
 
                 if (count <= 10 && count > 0) {
                     timerDisplay.classList.add('shake');
@@ -143,8 +169,18 @@
 
                 if (count <= 0) {
                     clearInterval(interval);
-                    bgAudio.pause(); 
+                    
+                    // 1. 停止背景音
+                    bgAudio.pause();
+                    
+                    // 2. 隐藏倒计时
                     timerDisplay.style.display = 'none';
+                    
+                    // 3. 触发闪光灯和快门声
+                    shutterAudio.play();
+                    flash.classList.add('flash-active');
+                    
+                    // 4. 显示图片
                     resultView.style.display = 'block';
                 }
             }, 1000);
