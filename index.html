@@ -37,7 +37,6 @@
             font-size: 1.2rem;
             letter-spacing: 2px;
             z-index: 101;
-            font-family: inherit;
         }
 
         #start-btn:hover {
@@ -62,26 +61,27 @@
             object-fit: contain;
         }
 
-        /* 闪光灯特效 */
+        /* 闪光灯层：确保 z-index 最高 */
         #flash {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #fff;
+            background: #ffffff;
             opacity: 0;
-            z-index: 102;
+            z-index: 999; 
             pointer-events: none;
         }
 
+        /* 闪光动画：瞬间亮起，快速熄灭 */
         .flash-active {
-            animation: flash-anim 0.3s ease-out;
+            animation: flash-anim 0.4s ease-out forwards;
         }
 
         @keyframes flash-anim {
-            0% { opacity: 1; }
-            20% { opacity: 1; }
+            0% { opacity: 0; }
+            10% { opacity: 1; }
             100% { opacity: 0; }
         }
 
@@ -101,6 +101,7 @@
 
     <button id="start-btn">开始</button>
     <div id="timer" style="display:none;">60</div>
+    
     <div id="flash"></div>
 
     <div id="result">
@@ -144,14 +145,11 @@
             "https://images.pexels.com/photos/35394188/pexels-photo-35394188.jpeg"
         ];
 
-        // 预选一张图片并加载
-        const pickRandomImage = () => {
+        startBtn.addEventListener('click', () => {
+            // 预选图片
             const randomIndex = Math.floor(Math.random() * imagePool.length);
             gazeImage.src = imagePool[randomIndex];
-        };
 
-        startBtn.addEventListener('click', () => {
-            pickRandomImage();
             startBtn.style.display = 'none';
             timerDisplay.style.display = 'block';
             
@@ -162,7 +160,6 @@
                 count--;
                 timerDisplay.innerText = count;
 
-                // 音量渐大
                 let vol = 0.05 + ((60 - count) / 60) * 0.90;
                 bgAudio.volume = Math.min(vol, 0.95);
 
@@ -173,20 +170,22 @@
                 if (count <= 0) {
                     clearInterval(interval);
                     
-                    // 彻底停止背景音
+                    // 1. 停止背景音
                     bgAudio.pause();
-                    bgAudio.currentTime = 0;
                     
+                    // 2. 隐藏倒计时
                     timerDisplay.style.display = 'none';
                     
-                    // 播放快门声
+                    // 3. 强制重置并触发快门声
                     shutterAudio.currentTime = 0;
                     shutterAudio.play();
                     
-                    // 闪光灯
+                    // 4. 强制触发闪光灯动画 (先移除再添加确保重置)
+                    flash.classList.remove('flash-active');
+                    void flash.offsetWidth; // 触发重绘
                     flash.classList.add('flash-active');
                     
-                    // 显示图片
+                    // 5. 显示结果图片
                     resultView.style.display = 'block';
                 }
             }, 1000);
