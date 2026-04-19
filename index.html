@@ -37,6 +37,7 @@
             font-size: 1.2rem;
             letter-spacing: 2px;
             z-index: 101;
+            font-family: inherit;
         }
 
         #start-btn:hover {
@@ -75,11 +76,12 @@
         }
 
         .flash-active {
-            animation: flash-anim 0.4s ease-out;
+            animation: flash-anim 0.3s ease-out;
         }
 
         @keyframes flash-anim {
             0% { opacity: 1; }
+            20% { opacity: 1; }
             100% { opacity: 0; }
         }
 
@@ -110,7 +112,7 @@
     </audio>
 
     <audio id="shutter-audio">
-        <source src="https://assets.mixkit.co/active_storage/sfx/528/528-preview.mp3" type="audio/mpeg">
+        <source src="https://assets.mixkit.co/active_storage/sfx/530/530-preview.mp3" type="audio/mpeg">
     </audio>
 
     <script>
@@ -142,14 +144,14 @@
             "https://images.pexels.com/photos/35394188/pexels-photo-35394188.jpeg"
         ];
 
-        // 预加载逻辑
-        const prepareResult = () => {
+        // 预选一张图片并加载
+        const pickRandomImage = () => {
             const randomIndex = Math.floor(Math.random() * imagePool.length);
             gazeImage.src = imagePool[randomIndex];
         };
 
         startBtn.addEventListener('click', () => {
-            prepareResult();
+            pickRandomImage();
             startBtn.style.display = 'none';
             timerDisplay.style.display = 'block';
             
@@ -160,6 +162,7 @@
                 count--;
                 timerDisplay.innerText = count;
 
+                // 音量渐大
                 let vol = 0.05 + ((60 - count) / 60) * 0.90;
                 bgAudio.volume = Math.min(vol, 0.95);
 
@@ -170,17 +173,20 @@
                 if (count <= 0) {
                     clearInterval(interval);
                     
-                    // 1. 停止背景音
+                    // 彻底停止背景音
                     bgAudio.pause();
+                    bgAudio.currentTime = 0;
                     
-                    // 2. 隐藏倒计时
                     timerDisplay.style.display = 'none';
                     
-                    // 3. 触发闪光灯和快门声
+                    // 播放快门声
+                    shutterAudio.currentTime = 0;
                     shutterAudio.play();
+                    
+                    // 闪光灯
                     flash.classList.add('flash-active');
                     
-                    // 4. 显示图片
+                    // 显示图片
                     resultView.style.display = 'block';
                 }
             }, 1000);
